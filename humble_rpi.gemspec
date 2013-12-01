@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'humble_rpi'
-  s.version = '0.1.3'
+  s.version = '0.1.4'
   s.summary = 'Designed for a Raspberry Pi which uses GPIO LEDs, 1 motion sensor and communicates with a SimplePubSub message broker'
   s.authors = ['James Robertson']
   s.files = Dir['lib/**/*.rb']

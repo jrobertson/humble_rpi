@@ -66,10 +66,10 @@ class HumbleRPi < RPi
 
     t1 = Time.now
     ws, opt = @ws, @opt
-    puts 'inside motion //'
+    #puts 'inside motion //'
     after pin: opt[:motion_pin].to_i, goes: :high do
 
-      puts Time.now.to_s + ' : motion detected'
+      #puts Time.now.to_s + ' : motion detected'
 
       if Time.now > t1 + ChronicDuration.parse('1 minute')  then
         ws.send opt[:device_name] + ': motion detected'
