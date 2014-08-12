@@ -6,6 +6,7 @@ require 'rpi'
 require 'chronic_duration'
 require 'sps-pub'
 require 'rpi_lcd16x2'
+require 'websocket-eventmachine-client'
 
 
 class HumbleRPi
@@ -49,7 +50,7 @@ class HumbleRPi
     c = WebSocket::EventMachine::Client
 
     Thread.new do   
-
+      
       EM.run do
 
         @ws = c.connect(uri: "ws://%s:%s" % [@opt[:sps_address], @opt[:sps_port]])

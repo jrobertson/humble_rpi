@@ -29,7 +29,7 @@ class HumbleRPi
     led_pins, lcd_pins = @opt[:led_pins], @opt[:lcd_pins]
     
     @lcd = RpiLcd16x2.new 'ready', lcd_pins if lcd_pins.any?
-    @led = RPi.new led_pins                 if led_pins.any?
+    @led = RPi.new(led_pins).led            if led_pins.any?
     @ws = nil
   end
 
