@@ -5,15 +5,19 @@
 require 'rpi'
 require 'chronic_duration'
 require 'sps-pub'
+require 'rpi_lcd16x2'
 
 
-class HumbleRPi < RPi
+class HumbleRPi
   include PiPiper  
+
+  attr_reader :led, :lcd
 
   def initialize(options={})
 
     default_options = {
       device_name: 'rpi',
+      lcd_pins:  {},
       led_pins:  [],
       motion_pin: nil, 
       sps_address: nil, 
@@ -22,7 +26,10 @@ class HumbleRPi < RPi
 
     @opt = default_options.merge options
     send_message 'humble_rpi initialized'
-    super @opt[:led_pins]
+    led_pins, lcd_pins = @opt[:led_pins], @opt[:lcd_pins]
+    
+    @lcd = RpiLcd16x2.new 'ready', lcd_pins if lcd_pins.any?
+    @led = Rpi.new led_pins                 if led_pins.any?
     @ws = nil
   end
 
@@ -35,7 +42,8 @@ class HumbleRPi < RPi
   
   protected
 
-  def led_listener(&blk)
+  def listener(&blk)
+
     rpi = self
 
     c = WebSocket::EventMachine::Client
@@ -69,6 +77,7 @@ class HumbleRPi < RPi
      
     end
 
+    alias led_listener listener
   end
 
   def motion_detect()
@@ -91,6 +100,7 @@ class HumbleRPi < RPi
     PiPiper.wait    
     
   end
+
 
 end
 

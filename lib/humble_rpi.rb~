@@ -74,7 +74,7 @@ class HumbleRPi < RPi
   def motion_detect()
 
     send_message 'motion detection activated'
-    t1 = Time.now + ChronicDuration.parse('1 minute and 10 seconds')
+    t1 = Time.now - ChronicDuration.parse('1 minute and 10 seconds')
     topic = @opt[:device_name]
     address, port = @opt[:sps_address], @opt[:sps_port]
 
