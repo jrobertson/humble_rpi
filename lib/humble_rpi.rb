@@ -32,13 +32,25 @@ class HumbleRPi
     @lcd = RpiLcd16x2.new 'ready', lcd_pins if lcd_pins.any?
     @led = RPi.new(led_pins).led            if led_pins.any?
     @ws = nil
+    
+    if @opt[:motion_pin] then
+      at_exit do
+        uexp = open("/sys/class/gpio/unexport", "w")
+        uexp.write(@opt[:motion_pin])
+        uexp.close
+      end
+    end
   end
 
   def send_message(msg)
 
     topic, address, port = @opt[:device_name], @opt[:sps_address], @opt[:sps_port]
     fqm = (topic + ': ' + msg)
-    address ? SPSPub.notice(fqm, address: address, port: port) : puts(fqm)
+    begin
+      address ? SPSPub.notice(fqm, address: address, port: port) : puts(fqm)
+    rescue
+      puts 'humble_rpi: warning, could not publish SPS notice.'
+    end
   end
   
   protected

@@ -66,7 +66,7 @@ class HumbleRPi
         end
 
         EventMachine.next_tick do
-          @ws.send "subscribe to topic: #{@opt[:device_name]}_led"
+          @ws.send "subscribe to topic: #{@opt[:device_name]}/output/#"
         end
 
         EventMachine.error_handler{ |e|
