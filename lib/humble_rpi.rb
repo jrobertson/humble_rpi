@@ -26,7 +26,7 @@ class HumbleRPi
     }
 
     @opt = default_options.merge options
-    send_message 'humble_rpi initialized'
+    send_message :info, 'humble_rpi initialized'
     led_pins, lcd_pins = @opt[:led_pins], @opt[:lcd_pins]
     
     @lcd = RpiLcd16x2.new 'ready', lcd_pins if lcd_pins.any?
@@ -42,10 +42,11 @@ class HumbleRPi
     end
   end
 
-  def send_message(msg)
+  def send_message(subtopic, msg)
 
     topic, address, port = @opt[:device_name], @opt[:sps_address], @opt[:sps_port]
-    fqm = (topic + ': ' + msg)
+    fqm = "%s/%s: %s" % [topic, subtopic, msg]
+    
     begin
       address ? SPSPub.notice(fqm, address: address, port: port) : puts(fqm)
     rescue
@@ -95,7 +96,7 @@ class HumbleRPi
 
   def motion_detect()
 
-    send_message 'motion detection activated'
+    send_message :info, 'motion detection activated'
     t1 = Time.now - ChronicDuration.parse('1 minute and 10 seconds')
     topic = @opt[:device_name]
     address, port = @opt[:sps_address], @opt[:sps_port]
@@ -105,7 +106,7 @@ class HumbleRPi
     after pin: @opt[:motion_pin].to_i, goes: :high do
 
       if Time.now > t1 + ChronicDuration.parse('1 minute')  then
-        hrpi.send_message 'motion detected'
+        hrpi.send_message :motion, 'detected'
         t1 = Time.now
       end
 
@@ -126,8 +127,6 @@ if __FILE__ == $0 then
   rpi = f
 
   onmessage = lambda do |msg,type|
-
-    puts 'message received'
 
     topic, raw_message = msg.split(/\s*:\s*/,2)
     r = raw_message.match(/(\d+)\s*(on|off|blink)\s*([\d\.]+)?/)
