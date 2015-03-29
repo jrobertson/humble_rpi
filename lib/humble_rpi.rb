@@ -112,6 +112,7 @@ class HumbleRPi
         hrpi.send_message :motion, "detected %s times within the past %s" \
                                                             % [count, duration]
         t1 = Time.now
+        count = 0
       end
 
     end
