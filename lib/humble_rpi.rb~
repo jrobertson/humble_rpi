@@ -102,11 +102,15 @@ class HumbleRPi
     address, port = @opt[:sps_address], @opt[:sps_port]
 
     hrpi = self
+    count  = 0
 
     after pin: @opt[:motion_pin].to_i, goes: :high do
-
-      if Time.now > t1 + ChronicDuration.parse('1 minute')  then
-        hrpi.send_message :motion, 'detected'
+      
+      count += 1
+      
+      if Time.now > t1 + ChronicDuration.parse(duration='1 minute')  then
+        hrpi.send_message :motion, "detected %s times within the past %s" \
+                                                            % [count, duration]
         t1 = Time.now
       end
 
@@ -124,33 +128,7 @@ if __FILE__ == $0 then
   # example of an RPi running with 1 LED and 1 motion sensor
 
   f = HumbleRPi.new device_name: 'fortina', led_pins: [17], sps_address: '192.168.4.170', motion_pin: '7'
-  rpi = f
 
-  onmessage = lambda do |msg,type|
-
-    topic, raw_message = msg.split(/\s*:\s*/,2)
-    r = raw_message.match(/(\d+)\s*(on|off|blink)\s*([\d\.]+)?/)
-
-    if r then
-      index, state, seconds = r.captures
-    elsif raw_message[/mpd|audio/] then
-      
-      h = {'mpd play' => :on, 'mpd stop' => :off, 
-           'audio on' => :on, 'audio off' => :off}
-      index, state = 0, h[raw_message]
-      
-    end
-
-    # seconds should be nil unless state == blink
-    if seconds then            
-      rpi.led[index.to_i].blink seconds.to_f
-    else
-      rpi.led[index.to_i].send(state.to_sym)
-    end
-
-  end
-
-  f.led_listener &onmessage
   sleep 3 # wait for the client to connect
   f.motion_detect 
 
