@@ -20,7 +20,8 @@ class HumbleRPi
       device_name: 'rpi',
       lcd_pins:  {},
       led_pins:  [],
-      motion_pin: nil, 
+      motion_pin: nil,
+      button_pins: [],
       sps_address: nil, 
       sps_port: '59000'
     }
@@ -33,11 +34,17 @@ class HumbleRPi
     @led = RPi.new(led_pins).led            if led_pins.any?
     @ws = nil
     
-    if @opt[:motion_pin] then
+    if @opt[:motion_pin] or @opt[:button_pins] then
+      
       at_exit do
-        uexp = open("/sys/class/gpio/unexport", "w")
-        uexp.write(@opt[:motion_pin])
-        uexp.close
+        
+        [@opt[:motion_pin], @opt[:button_pins]].flatten.compact.each do |pin|
+
+          uexp = open("/sys/class/gpio/unexport", "w")
+          uexp.write(pin)
+          uexp.close
+        
+        end
       end
     end
   end
@@ -55,6 +62,29 @@ class HumbleRPi
   end
   
   protected
+  
+  def button_detect()
+
+    send_message :info, 'button press detection activated'
+
+    topic = @opt[:device_name]
+    address, port = @opt[:sps_address], @opt[:sps_port]
+
+    hrpi = self
+
+    @opt[:button_pins].each,with_index do |button, i|
+      
+      after pin: button.to_i, goes: :low do
+        
+        hrpi.send_message :buttonpress, "button %s pressed" % i
+
+      end
+      
+    end
+    
+    PiPiper.wait    
+    
+  end  
 
   def listener(&blk)
 
