@@ -72,11 +72,15 @@ class HumbleRPi
 
     hrpi = self
 
-    @opt[:button_pins].each,with_index do |button, i|
+    @opt[:button_pins].each.with_index do |button, i|
       
-      after pin: button.to_i, goes: :low do
+      puts 'button %s on GPIO %s enabled ' % [i+1, button]
+      
+      n = (i+1).to_s
+      
+      PiPiper.watch :pin => button.to_i, :invert => true do |pin|
         
-        hrpi.send_message :buttonpress, "button %s pressed" % i
+        hrpi.send_message 'buttonpressed/' + n, "value %s" % [pin.value]
 
       end
       
