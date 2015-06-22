@@ -3,7 +3,8 @@
 # file: humble_rpi.rb
 
 require 'sps-pub'
-require 'sps-sub'
+#require 'sps-sub'
+require 'sps-sub-ping'
 
 
 class DummyNotifier
@@ -21,8 +22,19 @@ class HumbleRPi
 
     @device_name, @sps_address, @sps_port = device_name, sps_address, sps_port
     
-    @publisher, @subscriber = sps_address ? \
-                                    initialize_sps() : [DummyNotifier.new, nil]
+    @publisher, @subscriber = if sps_address then
+    
+      initialize_sps() 
+      
+      Thread.new do  
+        sp = SPSSubPing.new host: @sps_address, port: @sps_port, \
+                                       identifier: 'HumbleRPi/' + device_name
+        sp.start
+      end
+      
+    else
+      [DummyNotifier.new, nil]
+    end      
 
     @plugins = initialize_plugins(plugins || [])    
     
@@ -87,8 +99,7 @@ class HumbleRPi
                                 
       vars = {device_id: @device_name, notifier: @publisher}
 
-      r << Kernel.const_get(klass_name)\
-                      .new(settings: settings, variables: vars)
+      r << Kernel.const_get(klass_name).new(settings: settings, variables: vars)
 
     end
   end  
