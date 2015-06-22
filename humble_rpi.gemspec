@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'humble_rpi'
-  s.version = '0.6.0'
+  s.version = '0.6.1'
   s.summary = 'Controls components wired in through the Raspberry Pi\'s GPIO pins. see the Humble_rpi plugins.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/humble_rpi.rb']

@@ -3,7 +3,8 @@
 # file: humble_rpi.rb
 
 require 'sps-pub'
-require 'sps-sub'
+#require 'sps-sub'
+require 'sps-sub-ping'
 
 
 class DummyNotifier
