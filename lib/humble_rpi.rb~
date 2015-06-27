@@ -22,19 +22,8 @@ class HumbleRPi
 
     @device_name, @sps_address, @sps_port = device_name, sps_address, sps_port
     
-    @publisher, @subscriber = if sps_address then
-    
-      initialize_sps() 
-      
-      Thread.new do  
-        sp = SPSSubPing.new host: @sps_address, port: @sps_port, \
-                                       identifier: 'HumbleRPi/' + device_name
-        sp.start
-      end
-      
-    else
-      [DummyNotifier.new, nil]
-    end      
+    @publisher, @subscriber = sps_address ?  initialize_sps() \
+                                                :  [DummyNotifier.new, nil]    
 
     @plugins = initialize_plugins(plugins || [])    
     
@@ -67,8 +56,16 @@ class HumbleRPi
     end
         
     if @subscriber then
+      
+      Thread.new do  
+        sp = SPSSubPing.new host: @sps_address, port: @sps_port, \
+                                      identifier: 'HumbleRPi/' + @device_name
+        sp.start
+      end      
+      
       topic =  "#{@device_name}/output/#"
-      @subscriber.subscribe topic: topic
+      @subscriber.subscribe topic: topic            
+      
     else
       loop while true
     end

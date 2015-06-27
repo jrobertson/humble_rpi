@@ -15,36 +15,37 @@ class DummyNotifier
   
 end
 
-class HumbleRPi  
+class HumbleRPi
 
   def initialize(device_name: 'rpi', sps_address: nil, sps_port: 59000, \
-                                                                plugins: {})
+                                              plugins: {}, group_id: 'root')
 
     @device_name, @sps_address, @sps_port = device_name, sps_address, sps_port
+    @group_id = group_id
     
     @publisher, @subscriber = sps_address ?  initialize_sps() \
                                                 :  [DummyNotifier.new, nil]    
 
     @plugins = initialize_plugins(plugins || [])    
-    
+
   end
 
   # triggered from a sps-sub callback
   #
   def ontopic(topic, msg)
-    
+
     component = topic[/\w+$/]
-    
+
     method_name = "on_#{component}_message".to_sym
-    
+
     @plugins.each do |x|
-      
-      if x.respond_to? method_name then          
-        x.method(method_name).call(msg)          
+
+      if x.respond_to? method_name then
+        x.method(method_name).call(msg)
       end
-      
+
     end
-  end      
+  end
 
   def start()
 
@@ -56,15 +57,18 @@ class HumbleRPi
     end
         
     if @subscriber then
-      
-      Thread.new do  
+            
+      Thread.new do
         sp = SPSSubPing.new host: @sps_address, port: @sps_port, \
-                                      identifier: 'HumbleRPi/' + @device_name
+                   identifier: "HumbleRPi/%s/%s" % [@group_id, @device_name]
         sp.start
       end      
-      
-      topic =  "#{@device_name}/output/#"
-      @subscriber.subscribe topic: topic            
+
+      subtopics = %w(output do)
+      topics = subtopics\
+          .map {|x| "HumbleRPi/%s/%s/%s/#" % [@group_id, @device_name, x]}\
+                                                                   .join(' | ')
+      @subscriber.subscribe topic: topics
       
     else
       loop while true
@@ -72,15 +76,16 @@ class HumbleRPi
     
   end
 
-  
+
   private
-  
+
   def initialize_sps()
-    
+
     publisher = SPSPub.new address: @sps_address, port: @sps_port
-    publisher.notice @device_name + '/info: humble_rpi initialized'    
-    subscriber = SPSSub.new address: @sps_address, port: @sps_port, callback: self
-        
+    publisher.notice  "HumbleRPi/%s/%s/info: initialized" \
+                                              % [@group_id, @device_name]
+    subscriber = SPSSub.new address: @sps_address, port: @sps_port,\
+                                                               callback: self
     [publisher, subscriber]
     
   end
@@ -93,10 +98,12 @@ class HumbleRPi
       return r if settings[:active] == false and !settings[:active]
       
       klass_name = 'HumbleRPiPlugin' + name.to_s
-                                
-      vars = {device_id: @device_name, notifier: @publisher}
 
-      r << Kernel.const_get(klass_name).new(settings: settings, variables: vars)
+      device_id = "HumbleRPi/%s/%s" % [@group_id, @device_name]
+      vars = {device_id: device_id, notifier: @publisher}
+
+      r << Kernel.const_get(klass_name)\
+                                    .new(settings: settings, variables: vars)
 
     end
   end  
