@@ -27,6 +27,17 @@ class HumbleRPi
                                                 :  [DummyNotifier.new, nil]    
 
     @plugins = initialize_plugins(plugins || [])    
+    
+    at_exit do
+      
+      @plugins.each do |x|
+        if x.respond_to? :on_exit then
+          puts 'stopping ' + x.inspect
+          Thread.new { x.on_exit() }
+        end
+      end
+      
+    end
 
   end
 
