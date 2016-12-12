@@ -49,7 +49,7 @@ class HumbleRPi
 
     method_name = "on_#{component}_message".to_sym
 
-    @plugins.each do |x|
+    @plugins.each do |x|      
 
       if x.respond_to? method_name then
         x.method(method_name).call(msg)
@@ -61,9 +61,23 @@ class HumbleRPi
   def start()
 
     @plugins.each do |x|
+      
       if x.respond_to? :on_start then
+        
         puts 'starting ' + x.inspect
-        Thread.new { x.on_start() }
+        
+        Thread.new do  
+          
+          begin
+            x.on_start() 
+          rescue
+            puts 'problem with ' + x.to_s
+            puts 'retryng ...'
+            retry
+          end
+          
+        end
+        
       end
     end
         
@@ -115,7 +129,11 @@ class HumbleRPi
 
       r << Kernel.const_get(klass_name)\
                                     .new(settings: settings, variables: vars)
-
+      def r.to_s()
+        klass_name
+      end
+      
+      r
     end
   end  
 
